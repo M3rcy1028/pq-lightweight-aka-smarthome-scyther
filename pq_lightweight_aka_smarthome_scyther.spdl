@@ -1,0 +1,92 @@
+hashfunction xor, h, REP;
+
+protocol A (Ui, GWN, SDk){
+
+	role Ui {
+		fresh IDi, PWi, BIOi, ai, R, ct, HP : Nonce;
+		fresh ss : Nonce;
+		var   HIDi, SIDk, P, RR, B : Nonce;
+
+		// registration
+		send_0(Ui, GWN, {IDi, ai}k(Ui, GWN));
+		recv_1(GWN, Ui, {h(xor(IDi, ai))}k(GWN, Ui));
+		recv_4(SDk, Ui, {SIDk}k(SDk, Ui));
+
+		// authentication
+		match(P, xor(HP, h(PWi)));
+		match(RR, REP(BIOi, P));
+		match(B, xor(h(RR), ai));
+		match(HIDi, h(xor(IDi, ai)));
+
+		// Encapsulation
+		// M1 = E_ss(HIDi, SIDk)
+		send_5(Ui, GWN, {ss}pk(GWN), {HIDi, SIDk}ss);
+		
+		// receive V2
+		recv_8(GWN, Ui, h(xor(HIDi, ss)));
+
+		// claims
+		claim(Ui, Alive);
+		claim(Ui, Secret, ss);
+		claim(Ui, Weakagree);
+		claim(Ui, Niagree);
+		claim(Ui, Nisynch);
+	}
+
+	role GWN {
+		fresh PSK, aknew : Nonce;
+		var IDi, ai, SIDk, ak, ss, HIDi, SIDkr : Nonce;
+
+		recv_0(Ui, GWN, {IDi, ai}k(Ui, GWN));
+		// HIDi = h(xor(IDi, ai))
+		send_1(GWN, Ui, {h(xor(IDi, ai))}k(GWN, Ui));
+
+		recv_2(SDk, GWN, {SIDk, ak}k(SDk, GWN));
+		send_3(GWN, SDk, {PSK}k(GWN, SDk));
+		
+		// authentication
+		recv_5(Ui, GWN, {ss}pk(GWN), {HIDi, SIDkr}ss);
+		match(h(xor(IDi, ai)), HIDi);
+		// match(SIDk, SIDkr);
+
+		// session information
+		send_6(GWN, SDk, {ak, aknew, ss}PSK);
+
+		// receive V1
+		recv_7(SDk, GWN, h(xor(aknew, ss)));
+
+		// send V2 
+		send_8(GWN, Ui, h(xor(HIDi, ss)));
+
+		// claims
+		claim(GWN, Alive);
+		claim(GWN, Secret, ss);
+		claim(GWN, Weakagree);
+		claim(GWN, Niagree);
+		claim(GWN, Nisynch);
+	}
+
+	role SDk {
+		fresh ak, SIDk : Nonce;
+		var   PSK, aknew, ss, akr : Nonce;
+
+		// secure channel
+		send_2(SDk, GWN, {SIDk, ak}k(SDk, GWN));
+		recv_3(GWN, SDk, {PSK}k(GWN, SDk));
+		send_4(SDk, Ui, {SIDk}k(SDk, Ui));
+		
+		// M2 = E_PSK(ak, aknew, ss)
+		recv_6(GWN, SDk, {akr, aknew, ss}PSK);
+		
+		match(akr, ak);
+		// V1 = h(xor(aknew, ss));
+		send_7(SDk, GWN, h(xor(aknew, ss)));
+
+		// claims
+		claim(SDk, Alive);
+		claim(SDk, Secret, ss);
+		claim(SDk, Weakagree);
+		claim(SDk, Niagree);
+		claim(SDk, Nisynch);
+	}
+}
