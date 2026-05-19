@@ -2,6 +2,15 @@
 
 Formal verification artifacts (Scyther model and verification results) for a hybrid post-quantum authentication and key exchange protocol designed for resource-constrained smart home environments.
 
+```bibtex
+@article{kim2026pqcsmarthome,
+  author    = {Kim, Junsik and Woo, Naryun and Ryu, Jihyun},
+  title     = {A Post-Quantum Resistant Lightweight Key Authentication and Exchange Protocol for Smart Home Environments},
+  journal   = {IEEE Access},
+  year      = {2026}
+}
+```
+
 ---
 
 ## 📄 Manuscript Information
